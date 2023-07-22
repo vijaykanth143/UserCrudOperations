@@ -6,7 +6,6 @@ import Colors from '../Style/Colors';
 import ButtonComp from '../Components/ButtonComp';
 import {
   heightPercentageToDP as hp,
-  widthPercentageToDP,
   widthPercentageToDP as wp,
 } from 'react-native-responsive-screen';
 
@@ -15,7 +14,13 @@ import {useSelector, useDispatch} from 'react-redux';
 import FloatingLableInput from '../Components/FloatingLableInput';
 
 import TableItem from '../Components/TableItem';
-import {deletePost, fetchPosts, updatePost} from '../store/slices/postSlice';
+import {
+  addPost,
+  deletePost,
+  fetchPosts,
+  updatePost,
+} from '../store/slices/postSlice';
+import PopUp from '../Components/PopUp';
 const Users = () => {
   const dispatch = useDispatch();
   const posts = useSelector(state => state.posts);
@@ -25,8 +30,12 @@ const Users = () => {
   //console.log(posts, 'posts');
   const [UsersList, setUsersList] = useState(posts);
   const [alertVisible, setAlertVisible] = useState(false);
+  const [AddAlert, setAddAlertVisible] = useState(false);
+  const [DeleteAlert, setDeleteAlertVisible] = useState(false);
 
   const [Data, setData] = useState({});
+  const [AddData, setAddData] = useState({});
+  const [DeleteId, setID] = useState(null);
 
   const updateUser = item => {
     console.log('Edit Item:', item);
@@ -52,20 +61,34 @@ const Users = () => {
     // setIndex(index);
     setData(data[0]);
   };
-
+  const handleDeleteAlert = itemId => {
+    setDeleteAlertVisible(true);
+    setID(itemId);
+  };
   const handleDelete = itemId => {
     // Implement your delete logic here
-    const updatedData = UsersList.filter(item => item.id !== itemId);
+    const updatedData = UsersList.filter(item => item.id !== DeleteId);
     setUsersList(updatedData);
-    dispatch(deletePost(itemId));
+    dispatch(deletePost(DeleteId));
+    setDeleteAlertVisible(false);
   };
   const handleAdd = itemId => {
-    // Implement your delete logic here
-    const updatedData = UsersList.filter(item => item.id !== itemId);
-    setUsersList(updatedData);
-    dispatch(deletePost(itemId));
+    const data = {
+      id: UsersList?.length + 1,
+      userId: Math.random().toFixed(0),
+      title: AddData?.title,
+      body: AddData?.body,
+    };
+    console.log('data', data, UsersList[0]);
+    //UsersList.push(data);
+    setUsersList(prevstate => [...prevstate, data]);
+    dispatch(addPost(data));
+    setAddAlertVisible(false);
+    setAddData(null);
   };
-  const handleAddAlert = () => {};
+  const handleAddAlert = () => {
+    setAddAlertVisible(true);
+  };
   useEffect(() => {
     if (!dataFetched) {
       dispatch(fetchPosts());
@@ -74,7 +97,7 @@ const Users = () => {
 
   return (
     <View style={styles.container}>
-      <Overlay
+      {/* <Overlay
         backdropStyle={{
           backgroundColor: '#00000080',
         }}
@@ -154,14 +177,57 @@ const Users = () => {
             </View>
           </View>
         </View>
-      </Overlay>
+      </Overlay> */}
+      <PopUp
+        onChangeBody={e => setData({...Data, body: e})}
+        onChangeTitle={e => setData({...Data, title: e})}
+        Data={Data}
+        handle={() => updateUser(Data?.id)}
+        alertVisible={alertVisible}
+        onBackdropPress={() => {
+          setAlertVisible(false);
+        }}
+        popUpName="Update Data"
+        ButtonName="Update"
+      />
+      <PopUp
+        onChangeBody={e => setAddData({...AddData, body: e})}
+        onChangeTitle={e => setAddData({...AddData, title: e})}
+        Data={AddData}
+        handle={handleAdd}
+        alertVisible={AddAlert}
+        onBackdropPress={() => {
+          setAddAlertVisible(false);
+        }}
+        popUpName="Add Data"
+        ButtonName="Add"
+      />
+      <PopUp
+        handle={handleDelete}
+        alertVisible={DeleteAlert}
+        onBackdropPress={() => {
+          setDeleteAlertVisible(false);
+        }}
+        popUpName="Delete Data"
+        ButtonName1="Yes"
+        ButtonName2="No"
+        Des={`Are you sure to delete this Data of Id(${DeleteId})?`}
+      />
       <Text style={styles.title}>Table Example</Text>
-
+      <ButtonComp
+        title={'Add data'}
+        onPress={() => {
+          handleAddAlert();
+        }}
+        buttonStyle={[
+          styles.buttonStyle,
+          {alignSelf: 'flex-end', marginVertical: hp(2)},
+        ]}
+        textStyle={[Font.semibold, Font.medium, {color: '#ffffff'}]}
+      />
       <ScrollView style={styles.tableContainer}>
         <View style={styles.header}>
-          <Text style={[styles.headerText, {width: widthPercentageToDP(10)}]}>
-            S.No
-          </Text>
+          <Text style={[styles.headerText, {width: wp(10)}]}>S.No</Text>
           <Text style={styles.headerText}>Title</Text>
           <Text style={styles.headerText}>Body</Text>
           <Text style={[styles.headerText]}>Actions</Text>
@@ -171,7 +237,7 @@ const Users = () => {
             key={item.id}
             item={item}
             onPressEdit={handleEditAlert}
-            onPressDelete={handleDelete}
+            onPressDelete={handleDeleteAlert}
           />
         ))}
       </ScrollView>
@@ -186,7 +252,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
     backgroundColor: '#f0f0f0',
-    width: widthPercentageToDP(100),
+    width: wp(100),
   },
   title: {
     fontSize: 20,
@@ -205,7 +271,7 @@ const styles = StyleSheet.create({
   },
   headerText: {
     fontWeight: 'bold',
-    width: widthPercentageToDP(20),
+    width: wp(20),
   },
   tableContainer: {
     backgroundColor: '#ffffff',

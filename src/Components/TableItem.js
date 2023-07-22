@@ -7,12 +7,14 @@ const TableItem = ({item, onPressEdit, onPressDelete}) => {
     <View style={styles.row}>
       <Text style={{width: widthPercentageToDP(10)}}>{item.id}</Text>
       <Text style={{width: widthPercentageToDP(20)}}>
-        {item.title.length > 10
-          ? item.title.slice(0, 10) + '......'
-          : item.title}
+        {item?.title?.length > 10
+          ? item?.title.slice(0, 10) + '......'
+          : item?.title}
       </Text>
       <Text style={{width: widthPercentageToDP(20)}}>
-        {item.body.length > 10 ? item.body.slice(0, 10) + '......' : item.body}
+        {item?.body?.length > 10
+          ? item?.body.slice(0, 10) + '......'
+          : item?.body}
       </Text>
       <View style={styles.actions}>
         <TouchableOpacity onPress={() => onPressEdit(item)}>
